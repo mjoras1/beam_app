@@ -39,3 +39,6 @@
 - Asked: Simplify the beam and loading sections so they are easier to read.
   Changed: Grouped beam inputs into geometry/support and member-property sections, clarified the self-weight option, renamed technical load fields in plain language, and added short explanations for point and uniform loads.
   Worked: Yes; browser-checked the form at 390px and confirmed adding a 2 kip point load updates the expected maximum moment to 61.3 kip-ft.
+- Asked: Publish the app to a public GitHub repository, enable GitHub Pages from `main` at the repository root, and share/test the site.
+  Changed: Confirmed the repository is public and the `main` commit is pushed; found that Pages is not enabled and the GitHub settings page requires sign-in. No configuration or peer sharing was performed.
+  Worked: Partially; the expected Pages address currently returns 404 until Pages is enabled. The authenticated settings step and in-person sharing/testing remain to be completed.
