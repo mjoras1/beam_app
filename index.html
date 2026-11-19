@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An educational beam mechanics explorer for reactions, shear, moment, and deflection.">
+  <title>Beam Studio | Mechanics Explorer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #193b29;
+      --muted: #5f7664;
+      --line: #d6e5d6;
+      --surface: #ffffff;
+      --canvas: #edf5ec;
+      --pine: #267044;
+      --pine-dark: #1e5734;
+      --pine-soft: #e2f2e5;
+      --leaf: #54a96c;
+      --load: #b67b3b;
+      --load-ink: #82612f;
+      --red: #a64e43;
+      --shadow: 0 14px 36px rgba(31, 83, 48, .09);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 8% 12%, rgba(116, 188, 128, .15), transparent 34rem),
+        radial-gradient(ellipse at 92% 18%, rgba(86, 154, 96, .1), transparent 34rem),
+        linear-gradient(180deg, #f8fcf7 0, var(--canvas) 34rem);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    button, input, select { font: inherit; }
+    button, select, input { color: inherit; }
+
+    .topbar {
+      height: 66px;
+      padding: 0 clamp(18px, 4vw, 56px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(110deg, #17422b, #28653c);
+      color: #fff;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-weight: 750;
+      letter-spacing: -.02em;
+    }
+
+    .brand-mark {
+      width: 31px;
+      height: 31px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 9px;
+      background: rgba(255,255,255,.06);
+      color: #d5efc6;
+    }
+
+    .topbar-note {
+      color: #d0ddcf;
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    main {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 34px clamp(16px, 3vw, 42px) 56px;
+    }
+
+    .intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--pine);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(29px, 4vw, 42px);
+      line-height: 1.1;
+      letter-spacing: -.045em;
+    }
+
+    .intro-copy {
+      max-width: 590px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .mode-badge, .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #b9d8bd;
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--pine-dark);
+      background: #eff8ed;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .mode-badge::before, .status-pill::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--leaf);
+      content: "";
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(330px, 410px) minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-heading {
+      padding: 20px 22px 15px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(110deg, #f1f8ef, #fff 78%);
+    }
+
+    .panel-heading h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -.02em;
+    }
+
+    .panel-heading p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .form-content { padding: 18px 22px 22px; }
+
+    fieldset {
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    fieldset + fieldset { margin-top: 21px; }
+
+    legend {
+      width: 100%;
+      margin-bottom: 11px;
+      padding: 0;
+      color: var(--pine);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 12px;
+    }
+
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+
+    .field-section + .field-section {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 15px;
+    }
+
+    .field-section-title {
+      margin-bottom: 10px;
+      color: var(--pine-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .field-section-help {
+      margin: -4px 0 11px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .field label, .field-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 5px;
+      color: #365c40;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .unit {
+      color: #7d8d80;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    input[type="number"], input[type="text"], select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #bed4c1;
+      border-radius: 8px;
+      padding: 8px 10px;
+      outline: none;
+      background: #fff;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    input:focus, select:focus, button:focus-visible {
+      border-color: var(--pine);
+      box-shadow: 0 0 0 3px rgba(38, 112, 68, .18);
+      outline: none;
+    }
+
+    input:disabled {
+      background: #edf4ed;
+      color: #617765;
+    }
+
+    .property-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 42px;
+      margin-top: 12px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #f3f8f2;
+      cursor: pointer;
+    }
+
+    .toggle-copy { display: grid; gap: 1px; }
+    .toggle-copy strong { color: var(--pine-dark); font-size: 12px; }
+    .toggle-copy span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      flex: 0 0 auto;
+      margin: 0;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--pine);
+    }
+
+    .load-group + .load-group {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 15px;
+    }
+
+    .load-group-title {
+      margin-bottom: 3px;
+      color: var(--pine);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .load-group-help {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .load-row {
+      position: relative;
+      margin-bottom: 10px;
+      padding: 13px 38px 13px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f5faf4;
+    }
+
+    .load-row-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .load-row .field label { font-size: 11px; }
+    .load-row input, .load-row select { min-height: 36px; padding: 6px 8px; font-size: 12px; }
+
+    .remove-load {
+      position: absolute;
+      top: 8px;
+      right: 7px;
+      width: 25px;
+      height: 25px;
+      border: 0;
+      border-radius: 6px;
+      color: #78887a;
+      background: transparent;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .remove-load:hover { color: var(--red); background: #fbefec; }
+
+    .button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .button {
+      min-height: 37px;
+      border: 1px solid #bed6c2;
+      border-radius: 8px;
+      padding: 7px 10px;
+      color: var(--pine-dark);
+      background: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .button:hover { border-color: var(--pine); background: var(--pine-soft); }
+
+    .button-primary {
+      border-color: var(--pine);
+      color: white;
+      background: var(--pine);
+    }
+
+    .button-primary:hover { border-color: var(--pine-dark); background: var(--pine-dark); }
+
+    .form-error {
+      display: none;
+      margin-top: 15px;
+      border: 1px solid #e8c1bd;
+      border-radius: 9px;
+      padding: 10px 12px;
+      color: #8d302a;
+      background: #fff5f2;
+      font-size: 12px;
+    }
+
+    .form-error.visible { display: block; }
+
+    .capacity-note {
+      margin-top: 18px;
+      border-left: 3px solid #c28a4c;
+      border-radius: 0 8px 8px 0;
+      padding: 10px 12px;
+      color: #765c38;
+      background: #fff9f0;
+      font-size: 11px;
+    }
+
+    .results-panel { min-width: 0; }
+    .results-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .results-body { padding: 19px 22px 22px; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 17px;
+    }
+
+    .metric {
+      min-width: 0;
+      border: 1px solid #d5e7d6;
+      border-radius: 10px;
+      border-top: 2px solid #8fc69a;
+      padding: 11px 13px 12px;
+      background: linear-gradient(145deg, #f4faf2, #fff 75%);
+    }
+
+    .metric-label {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      display: block;
+      margin-top: 4px;
+      color: var(--pine-dark);
+      font-size: clamp(17px, 2vw, 22px);
+      font-weight: 800;
+      letter-spacing: -.035em;
+      overflow-wrap: anywhere;
+    }
+
+    .metric-sub {
+      display: block;
+      margin-top: 2px;
+      color: #7a897d;
+      font-size: 10px;
+    }
+
+    .reaction-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 17px;
+      color: #416b4b;
+      font-size: 12px;
+    }
+
+    .reaction-chip {
+      border: 1px solid #d7e7d7;
+      border-radius: 7px;
+      padding: 6px 9px;
+      background: #f3f8f2;
+    }
+
+    .diagram-card {
+      overflow: hidden;
+      margin-top: 13px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: #fff;
+    }
+
+    .diagram-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 13px 0;
+    }
+
+    .diagram-header h3 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .diagram-header span {
+      color: #7d8d80;
+      font-size: 10px;
+    }
+
+    .svg-wrap { width: 100%; overflow: hidden; }
+    svg { display: block; width: 100%; height: auto; }
+
+    .chart-grid {
+      stroke: #e0ecdf;
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .chart-axis {
+      stroke: #9db59f;
+      stroke-width: 1.2;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .chart-line {
+      fill: none;
+      stroke: var(--pine);
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .chart-label {
+      fill: #64836b;
+      font-family: inherit;
+      font-size: 11px;
+    }
+
+    .diagram-note {
+      margin: 11px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .checks-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 17px;
+      border: 1px solid #edcfaa;
+      border-radius: 10px;
+      padding: 12px 13px;
+      color: #6b512f;
+      background: #fff9f0;
+      font-size: 12px;
+    }
+
+    .checks-banner strong { display: block; margin-bottom: 2px; }
+    .checks-icon { font-size: 16px; }
+
+    .assumptions {
+      margin-top: 15px;
+      border-top: 1px solid var(--line);
+      padding-top: 13px;
+      color: #68796d;
+      font-size: 11px;
+    }
+
+    .assumptions strong { color: var(--pine-dark); }
+
+    .empty-state {
+      display: none;
+      padding: 28px 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state.visible { display: block; }
+    .results-content.hidden { display: none; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+      border: 0;
+    }
+
+    @media (max-width: 1050px) {
+      .workspace { grid-template-columns: minmax(300px, 370px) minmax(0, 1fr); gap: 15px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 800px) {
+      .workspace { grid-template-columns: 1fr; }
+      .intro { align-items: start; flex-direction: column; }
+      .mode-badge { align-self: flex-start; }
+    }
+
+    @media (max-width: 480px) {
+      main { padding-top: 25px; }
+      .topbar { height: 58px; }
+      .topbar-note { font-size: 10px; }
+      .form-content, .results-body { padding: 16px; }
+      .panel-heading { padding: 17px 16px 13px; }
+      .metrics { gap: 7px; }
+      .metric { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2 7.5 8h2.3L5.8 13h3l-4 5h5.7v4h3v-4h5.7l-4-5h3l-4-5h2.3L12 2Z" fill="currentColor"></path></svg>
+      </span>
+      <span>Beam Studio</span>
+    </div>
+    <div class="topbar-note">Mechanics explorer</div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Beam mechanics · v1</p>
+        <h1 id="page-title">Explore how a beam responds.</h1>
+        <p class="intro-copy">Set up a beam, apply loads, and explore reactions, shear, moment, and elastic deflection. Edit the sample properties to match the member you are studying.</p>
+      </div>
+      <span class="mode-badge">Educational mechanics only</span>
+    </section>
+
+    <div class="workspace">
+      <section class="panel" aria-labelledby="setup-title">
+        <div class="panel-heading">
+          <h2 id="setup-title">Beam setup</h2>
+          <p>Changes update the diagrams and results automatically.</p>
+        </div>
+
+        <form class="form-content" id="beam-form" novalidate>
+          <fieldset>
+            <legend>Beam setup</legend>
+            <div class="field-section">
+              <div class="field-section-title">Geometry and supports</div>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="units">Units</label>
+                  <select id="units" name="units">
+                    <option value="us">US customary</option>
+                    <option value="si">SI</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="support">Support condition</label>
+                  <select id="support" name="support">
+                    <option value="simple">Simply supported</option>
+                    <option value="cantilever">Cantilever</option>
+                  </select>
+                </div>
+                <div class="field full">
+                  <label for="span">Beam span <span class="unit" data-unit="length">ft</span></label>
+                  <input id="span" name="span" data-kind="length" type="number" min="0" step="any" value="20" inputmode="decimal" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="field-section">
+              <div class="field-section-title">Member properties</div>
+              <p class="field-section-help">E and I describe the member stiffness; weight is optional.</p>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="material">Material</label>
+                  <select id="material" name="material">
+                    <option value="steel">Steel</option>
+                    <option value="lumber">Lumber</option>
+                  </select>
+                </div>
+                <div class="field full">
+                  <label for="section-name">Section name</label>
+                  <input id="section-name" name="sectionName" type="text" value="W12x26 (demo properties)" maxlength="80">
+                </div>
+                <div class="field">
+                  <label for="elastic-modulus">Elastic modulus, E <span class="unit" data-unit="elastic">ksi</span></label>
+                  <input id="elastic-modulus" name="elasticModulus" data-kind="elastic" type="number" min="0" step="any" value="29000" inputmode="decimal" required>
+                </div>
+                <div class="field">
+                  <label for="inertia">Moment of inertia, I <span class="unit" data-unit="inertia">in⁴</span></label>
+                  <input id="inertia" name="inertia" data-kind="inertia" type="number" min="0" step="any" value="204" inputmode="decimal" required>
+                </div>
+                <div class="field full">
+                  <label for="weight-per-length">Member weight <span class="unit" data-unit="weight">lb/ft</span></label>
+                  <input id="weight-per-length" name="weightPerLength" data-kind="weight" type="number" min="0" step="any" value="26" inputmode="decimal">
+                </div>
+              </div>
+              <label class="toggle-row" for="include-self-weight">
+                <span class="toggle-copy">
+                  <strong>Include self-weight</strong>
+                  <span>Add the member weight as a downward load.</span>
+                </span>
+                <input id="include-self-weight" name="includeSelfWeight" type="checkbox" aria-label="Include member self-weight" checked>
+              </label>
+              <p class="property-note" id="property-note">Sample values are illustrative. Verify E, I, and weight against a trusted source.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Loads</legend>
+            <div class="load-group">
+              <div class="load-group-title">Point loads</div>
+              <p class="load-group-help">A single force at a chosen position.</p>
+              <div id="point-loads"></div>
+              <button class="button" type="button" data-add-load="point">+ Add a point load</button>
+            </div>
+            <div class="load-group">
+              <div class="load-group-title">Uniform loads</div>
+              <p class="load-group-help">A force spread evenly over part or all of the beam.</p>
+              <div id="uniform-loads"></div>
+              <button class="button" type="button" data-add-load="uniform">+ Add a uniform load</button>
+            </div>
+          </fieldset>
+
+          <div class="form-error" id="form-error" role="alert"></div>
+          <div class="capacity-note">
+            This version calculates elastic beam response only. It does not evaluate AISC/NDS strength, stability, bearing, load combinations, or design-code compliance.
+          </div>
+        </form>
+      </section>
+
+      <section class="panel results-panel" aria-labelledby="results-title">
+        <div class="panel-heading results-top">
+          <div>
+            <h2 id="results-title">Analysis results</h2>
+            <p id="result-caption">Simply supported · 20 ft span</p>
+          </div>
+          <span class="status-pill">Mechanics response</span>
+        </div>
+        <div class="results-body">
+          <div class="empty-state" id="empty-state" aria-live="polite"></div>
+          <div class="results-content" id="results-content">
+            <div class="metrics" id="metrics"></div>
+            <div class="reaction-strip" id="reactions" aria-label="Support reactions"></div>
+
+            <div class="diagram-card">
+              <div class="diagram-header"><h3>Beam and loads</h3><span id="beam-units-caption"></span></div>
+              <div class="svg-wrap" id="beam-diagram"></div>
+            </div>
+            <div class="diagram-card">
+              <div class="diagram-header"><h3>Shear force</h3><span id="shear-unit-caption"></span></div>
+              <div class="svg-wrap" id="shear-diagram"></div>
+            </div>
+            <div class="diagram-card">
+              <div class="diagram-header"><h3>Bending moment</h3><span id="moment-unit-caption"></span></div>
+              <div class="svg-wrap" id="moment-diagram"></div>
+            </div>
+            <div class="diagram-card">
+              <div class="diagram-header"><h3>Elastic deflection</h3><span id="deflection-unit-caption"></span></div>
+              <div class="svg-wrap" id="deflection-diagram"></div>
+            </div>
+
+            <div class="checks-banner">
+              <span class="checks-icon" aria-hidden="true">!</span>
+              <div><strong>Member capacity checks are not evaluated.</strong> The L/360 value below is an informational reference only; it is not a pass/fail design check.</div>
+            </div>
+            <p class="diagram-note" id="self-weight-note"></p>
+            <div class="assumptions">
+              <strong>Sign convention and assumptions:</strong> upward forces/reactions and sagging internal moment are positive; positive fixed-end reaction moment is counter-clockwise. The beam is prismatic with linear-elastic Euler-Bernoulli response, small deflections, constant E and I, and vertical loads only. Deflection is numerically integrated and its peak is estimated on a sampled grid. Shear deformation, code load combinations, capacity, stability, bearing, and connections are outside this version.
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+
+    const IN_PER_FT = 12;
+    const IN_PER_M = 39.37007874015748;
+    const MM_PER_IN = 25.4;
+    const KIP_PER_KN = 1 / 4.4482216152605;
+    const KSI_PER_GPA = 145.03773773020923;
+    const IN4_PER_MM4 = 1 / Math.pow(MM_PER_IN, 4);
+    const MAX_LOADS = 12;
+    const SAMPLE = {
+      spanFt: 20,
+      section: "W12x26 (demo properties)",
+      elasticKsi: 29000,
+      inertiaIn4: 204,
+      weightLbFt: 26,
+      uniformKipFt: 1
+    };
+
+    const form = document.getElementById("beam-form");
+    const errorBox = document.getElementById("form-error");
+    const resultsContent = document.getElementById("results-content");
+    const emptyState = document.getElementById("empty-state");
+    const pointLoads = document.getElementById("point-loads");
+    const uniformLoads = document.getElementById("uniform-loads");
+    let activeUnits = "us";
+    let loadId = 0;
+
+    function unitLabels() {
+      return activeUnits === "us"
+        ? { length: "ft", force: "kip", distributed: "kip/ft", elastic: "ksi", inertia: "in⁴", weight: "lb/ft", moment: "kip-ft", deflection: "in" }
+        : { length: "m", force: "kN", distributed: "kN/m", elastic: "GPa", inertia: "mm⁴", weight: "kN/m", moment: "kN-m", deflection: "mm" };
+    }
+
+    function lengthToIn(value) {
+      return activeUnits === "us" ? value * IN_PER_FT : value * IN_PER_M;
+    }
+
+    function lengthFromIn(value) {
+      return activeUnits === "us" ? value / IN_PER_FT : value / IN_PER_M;
+    }
+
+    function forceToKip(value) {
+      return activeUnits === "us" ? value : value * KIP_PER_KN;
+    }
+
+    function forceFromKip(value) {
+      return activeUnits === "us" ? value : value / KIP_PER_KN;
+    }
+
+    function distributedToKipPerIn(value) {
+      return activeUnits === "us" ? value / IN_PER_FT : value * KIP_PER_KN / IN_PER_M;
+    }
+
+    function distributedFromKipPerIn(value) {
+      return activeUnits === "us" ? value * IN_PER_FT : value * IN_PER_M / KIP_PER_KN;
+    }
+
+    function elasticToKsi(value) {
+      return activeUnits === "us" ? value : value * KSI_PER_GPA;
+    }
+
+    function elasticFromKsi(value) {
+      return activeUnits === "us" ? value : value / KSI_PER_GPA;
+    }
+
+    function inertiaToIn4(value) {
+      return activeUnits === "us" ? value : value * IN4_PER_MM4;
+    }
+
+    function inertiaFromIn4(value) {
+      return activeUnits === "us" ? value : value / IN4_PER_MM4;
+    }
+
+    function weightToKipPerIn(value) {
+      return activeUnits === "us" ? value / 12000 : distributedToKipPerIn(value);
+    }
+
+    function weightFromKipPerIn(value) {
+      return activeUnits === "us" ? value * 12000 : distributedFromKipPerIn(value);
+    }
+
+    function numberFromInput(element, label, required) {
+      const raw = element.value.trim();
+      if (raw === "") {
+        if (required) throw new Error(label + " is required.");
+        return null;
+      }
+      const value = Number(raw);
+      if (!Number.isFinite(value)) throw new Error(label + " must be a finite number.");
+      return value;
+    }
+
+    function convertField(value, kind, fromUnits, toUnits) {
+      let internal;
+      if (kind === "length") internal = fromUnits === "us" ? value * IN_PER_FT : value * IN_PER_M;
+      else if (kind === "force") internal = fromUnits === "us" ? value : value * KIP_PER_KN;
+      else if (kind === "distributed") internal = fromUnits === "us" ? value / IN_PER_FT : value * KIP_PER_KN / IN_PER_M;
+      else if (kind === "elastic") internal = fromUnits === "us" ? value : value * KSI_PER_GPA;
+      else if (kind === "inertia") internal = fromUnits === "us" ? value : value * IN4_PER_MM4;
+      else if (kind === "weight") internal = fromUnits === "us" ? value / 12000 : value * KIP_PER_KN / IN_PER_M;
+      else return value;
+      if (kind === "length") return toUnits === "us" ? internal / IN_PER_FT : internal / IN_PER_M;
+      if (kind === "force") return toUnits === "us" ? internal : internal / KIP_PER_KN;
+      if (kind === "distributed") return toUnits === "us" ? internal * IN_PER_FT : internal * IN_PER_M / KIP_PER_KN;
+      if (kind === "elastic") return toUnits === "us" ? internal : internal / KSI_PER_GPA;
+      if (kind === "inertia") return toUnits === "us" ? internal : internal / IN4_PER_MM4;
+      if (kind === "weight") return toUnits === "us" ? internal * 12000 : internal * IN_PER_M / KIP_PER_KN;
+      return value;
+    }
+
+    function setUnitLabels() {
+      const labels = unitLabels();
+      document.querySelectorAll("[data-unit]").forEach((element) => {
+        element.textContent = labels[element.dataset.unit];
+      });
+      document.getElementById("beam-units-caption").textContent = "Length: " + labels.length;
+      document.getElementById("shear-unit-caption").textContent = labels.force;
+      document.getElementById("moment-unit-caption").textContent = labels.moment;
+      document.getElementById("deflection-unit-caption").textContent = labels.deflection;
+    }
+
+    function formatInputNumber(value) {
+      if (!Number.isFinite(value)) return "";
+      return Number(value.toPrecision(8)).toString();
+    }
+
+    function changeUnits(nextUnits) {
+      if (nextUnits === activeUnits) return;
+      const previous = activeUnits;
+      document.querySelectorAll("input[data-kind]").forEach((input) => {
+        if (input.value.trim() === "") return;
+        const value = Number(input.value);
+        if (!Number.isFinite(value)) return;
+        input.value = formatInputNumber(convertField(value, input.dataset.kind, previous, nextUnits));
+      });
+      activeUnits = nextUnits;
+      setUnitLabels();
+      calculateAndRender();
+    }
+
+    function createLoadRow(type, initial = {}) {
+      const container = type === "point" ? pointLoads : uniformLoads;
+      if (container.children.length >= MAX_LOADS) {
+        showError("A maximum of " + MAX_LOADS + " " + (type === "point" ? "point" : "uniform") + " loads is supported.");
+        return;
+      }
+      const id = ++loadId;
+      const row = document.createElement("div");
+      row.className = "load-row";
+      row.dataset.loadType = type;
+      row.dataset.loadId = String(id);
+
+      const directionOptions = '<option value="down">Down</option><option value="up">Up</option>';
+      if (type === "point") {
+        row.innerHTML =
+          '<button class="remove-load" type="button" aria-label="Remove point load">&times;</button>' +
+          '<div class="load-row-grid">' +
+            '<div class="field"><label>Force <span class="unit" data-unit="force">kip</span></label><input aria-label="Point load force" data-field="magnitude" data-kind="force" type="number" min="0" step="any" value="' + (initial.magnitude ?? "1") + '" required></div>' +
+            '<div class="field"><label>Direction</label><select aria-label="Point load direction" data-field="direction">' + directionOptions + '</select></div>' +
+            '<div class="field full"><label>Position along beam <span class="unit" data-unit="length">ft</span></label><input aria-label="Point load position along beam" data-field="position" data-kind="length" type="number" min="0" step="any" value="' + (initial.position ?? "10") + '" required></div>' +
+          '</div>';
+      } else {
+        row.innerHTML =
+          '<button class="remove-load" type="button" aria-label="Remove uniform load">&times;</button>' +
+          '<div class="load-row-grid">' +
+            '<div class="field"><label>Load per length <span class="unit" data-unit="distributed">kip/ft</span></label><input aria-label="Uniform load per length" data-field="magnitude" data-kind="distributed" type="number" min="0" step="any" value="' + (initial.magnitude ?? "1") + '" required></div>' +
+            '<div class="field"><label>Direction</label><select aria-label="Uniform load direction" data-field="direction">' + directionOptions + '</select></div>' +
+            '<div class="field"><label>Start position <span class="unit" data-unit="length">ft</span></label><input aria-label="Uniform load start position" data-field="start" data-kind="length" type="number" min="0" step="any" value="' + (initial.start ?? "0") + '" required></div>' +
+            '<div class="field"><label>End position <span class="unit" data-unit="length">ft</span></label><input aria-label="Uniform load end position" data-field="end" data-kind="length" type="number" min="0" step="any" value="' + (initial.end ?? "20") + '" required></div>' +
+          '</div>';
+      }
+      container.appendChild(row);
+      if (initial.direction) row.querySelector('[data-field="direction"]').value = initial.direction;
+      setUnitLabels();
+      row.querySelectorAll("input, select").forEach((input) => {
+        input.addEventListener("input", calculateAndRender);
+        input.addEventListener("change", calculateAndRender);
+      });
+      row.querySelector(".remove-load").addEventListener("click", () => {
+        row.remove();
+        calculateAndRender();
+      });
+      calculateAndRender();
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.classList.add("visible");
+      resultsContent.classList.add("hidden");
+      emptyState.textContent = "Correct the input issue to update the mechanics diagrams.";
+      emptyState.classList.add("visible");
+    }
+
+    function clearError() {
+      errorBox.textContent = "";
+      errorBox.classList.remove("visible");
+      emptyState.textContent = "";
+      emptyState.classList.remove("visible");
+      resultsContent.classList.remove("hidden");
+    }
+
+    function readInputs() {
+      const spanValue = numberFromInput(document.getElementById("span"), "Span", true);
+      if (spanValue <= 0) throw new Error("Span must be greater than zero.");
+      const L = lengthToIn(spanValue);
+      if (!Number.isFinite(L) || L <= 0) throw new Error("Span is outside the supported numeric range.");
+
+      const EValue = numberFromInput(document.getElementById("elastic-modulus"), "Elastic modulus E", true);
+      const IValue = numberFromInput(document.getElementById("inertia"), "Area moment of inertia I", true);
+      if (EValue <= 0) throw new Error("Elastic modulus E must be greater than zero.");
+      if (IValue <= 0) throw new Error("Area moment of inertia I must be greater than zero.");
+      const E = elasticToKsi(EValue);
+      const I = inertiaToIn4(IValue);
+      if (!Number.isFinite(E) || !Number.isFinite(I) || !Number.isFinite(E * I) || E * I <= 0) {
+        throw new Error("Elastic properties are outside the supported numeric range.");
+      }
+
+      const includeSelfWeight = document.getElementById("include-self-weight").checked;
+      const weightValue = numberFromInput(document.getElementById("weight-per-length"), "Member weight", includeSelfWeight);
+      if (weightValue !== null && weightValue < 0) throw new Error("Member weight cannot be negative.");
+      const selfWeight = includeSelfWeight ? weightToKipPerIn(weightValue) : 0;
+
+      const pointRows = Array.from(pointLoads.querySelectorAll(".load-row"));
+      const uniformRows = Array.from(uniformLoads.querySelectorAll(".load-row"));
+      const points = pointRows.map((row, index) => {
+        const magnitude = numberFromInput(row.querySelector('[data-field="magnitude"]'), "Point load " + (index + 1) + " magnitude", true);
+        const position = lengthToIn(numberFromInput(row.querySelector('[data-field="position"]'), "Point load " + (index + 1) + " location", true));
+        if (magnitude < 0) throw new Error("Point load magnitudes must be zero or positive; use direction to set the sign.");
+        if (position < 0 || position > L) throw new Error("Point load " + (index + 1) + " location must be within the beam span.");
+        const direction = row.querySelector('[data-field="direction"]').value;
+        return { P: forceToKip(magnitude) * (direction === "up" ? 1 : -1), a: position };
+      });
+      const uniforms = uniformRows.map((row, index) => {
+        const magnitude = numberFromInput(row.querySelector('[data-field="magnitude"]'), "Uniform load " + (index + 1) + " magnitude", true);
+        const a = lengthToIn(numberFromInput(row.querySelector('[data-field="start"]'), "Uniform load " + (index + 1) + " start", true));
+        const b = lengthToIn(numberFromInput(row.querySelector('[data-field="end"]'), "Uniform load " + (index + 1) + " end", true));
+        if (magnitude < 0) throw new Error("Uniform load magnitudes must be zero or positive; use direction to set the sign.");
+        if (a < 0 || b > L || a >= b) throw new Error("Uniform load " + (index + 1) + " needs a positive interval within the beam span.");
+        const direction = row.querySelector('[data-field="direction"]').value;
+        return { q: distributedToKipPerIn(magnitude) * (direction === "up" ? 1 : -1), a, b };
+      });
+      if (![selfWeight, ...points.flatMap((point) => [point.P, point.a]), ...uniforms.flatMap((load) => [load.q, load.a, load.b])].every(Number.isFinite)) {
+        throw new Error("One or more loads are outside the supported numeric range.");
+      }
+
+      const material = document.getElementById("material").value;
+      const sectionName = document.getElementById("section-name").value.trim() || "Unlabeled member";
+      return {
+        L,
+        E,
+        I,
+        support: document.getElementById("support").value,
+        material,
+        sectionName,
+        includeSelfWeight,
+        selfWeight,
+        points,
+        uniforms,
+        spanDisplay: spanValue
+      };
+    }
+
+    function totalAppliedForce(data) {
+      let total = data.points.reduce((sum, point) => sum + point.P, 0);
+      total += data.uniforms.reduce((sum, load) => sum + load.q * (load.b - load.a), 0);
+      total -= data.selfWeight * data.L;
+      return total;
+    }
+
+    function totalMomentAboutLeft(data) {
+      let total = data.points.reduce((sum, point) => sum + point.P * point.a, 0);
+      total += data.uniforms.reduce((sum, load) => sum + load.q * (load.b - load.a) * (load.a + load.b) / 2, 0);
+      total -= data.selfWeight * data.L * data.L / 2;
+      return total;
+    }
+
+    function supportReactions(data) {
+      const force = totalAppliedForce(data);
+      if (data.support === "simple") {
+        const right = -totalMomentAboutLeft(data) / data.L;
+        return { left: -force - right, right, internalMomentAtLeft: 0, supportMoment: 0 };
+      }
+      const left = -force;
+      let momentAtRightFromLoads = 0;
+      data.points.forEach((point) => {
+        momentAtRightFromLoads += point.P * (data.L - point.a);
+      });
+      data.uniforms.forEach((load) => {
+        momentAtRightFromLoads += load.q * (Math.pow(data.L - load.a, 2) - Math.pow(data.L - load.b, 2)) / 2;
+      });
+      momentAtRightFromLoads -= data.selfWeight * data.L * data.L / 2;
+      const internalMomentAtLeft = -(left * data.L + momentAtRightFromLoads);
+      return { left, right: null, internalMomentAtLeft, supportMoment: -internalMomentAtLeft };
+    }
+
+    function shearAt(data, reactions, x, side) {
+      let value = reactions.left;
+      data.points.forEach((point) => {
+        const hasPassed = side === "right" ? point.a <= x : point.a < x;
+        if (hasPassed) value += point.P;
+      });
+      data.uniforms.forEach((load) => {
+        const loadedLength = Math.max(0, Math.min(x, load.b) - load.a);
+        if (loadedLength > 0) value += load.q * loadedLength;
+      });
+      if (x > 0) value -= data.selfWeight * Math.min(x, data.L);
+      return value;
+    }
+
+    function momentAt(data, reactions, x) {
+      let value = reactions.internalMomentAtLeft + reactions.left * x;
+      data.points.forEach((point) => {
+        if (x > point.a) value += point.P * (x - point.a);
+      });
+      data.uniforms.forEach((load) => {
+        const end = Math.min(x, load.b);
+        if (end > load.a) {
+          value += load.q * (x * (end - load.a) - (end * end - load.a * load.a) / 2);
+        }
+      });
+      if (x > 0) value -= data.selfWeight * x * x / 2;
+      return value;
+    }
+
+    function sampleCoordinates(data, count) {
+      const coordinates = [];
+      for (let index = 0; index <= count; index += 1) coordinates.push(data.L * index / count);
+      data.points.forEach((point) => coordinates.push(point.a));
+      data.uniforms.forEach((load) => coordinates.push(load.a, load.b));
+      return Array.from(new Set(coordinates)).sort((a, b) => a - b);
+    }
+
+    function deflectionCurve(data, reactions, xs) {
+      const curvature = xs.map((x) => momentAt(data, reactions, x) / (data.E * data.I));
+      const baseSlope = new Array(xs.length).fill(0);
+      const baseDeflection = new Array(xs.length).fill(0);
+      for (let index = 1; index < xs.length; index += 1) {
+        const dx = xs[index] - xs[index - 1];
+        baseSlope[index] = baseSlope[index - 1] + (curvature[index - 1] + curvature[index]) * dx / 2;
+        baseDeflection[index] = baseDeflection[index - 1] + (baseSlope[index - 1] + baseSlope[index]) * dx / 2;
+      }
+      const slopeOffset = data.support === "simple" ? -baseDeflection[baseDeflection.length - 1] / data.L : 0;
+      return xs.map((x, index) => ({ x, value: baseDeflection[index] + slopeOffset * x }));
+    }
+
+    function getEnvelope(data, reactions, xs, deflection) {
+      const shearCandidates = [];
+      xs.forEach((x) => {
+        if (x <= 0) {
+          shearCandidates.push({ x, value: shearAt(data, reactions, x, "right") });
+        } else if (x >= data.L) {
+          shearCandidates.push({ x, value: shearAt(data, reactions, x, "left") });
+        } else {
+          shearCandidates.push({ x, value: shearAt(data, reactions, x, "left") });
+          shearCandidates.push({ x, value: shearAt(data, reactions, x, "right") });
+        }
+      });
+      const momentXs = xs.slice();
+      for (let index = 1; index < xs.length; index += 1) {
+        const x0 = xs[index - 1];
+        const x1 = xs[index];
+        const v0 = shearAt(data, reactions, x0, "right");
+        const v1 = shearAt(data, reactions, x1, "left");
+        if (v0 === 0) momentXs.push(x0);
+        if (v1 === 0) momentXs.push(x1);
+        if (Math.sign(v0) !== Math.sign(v1)) momentXs.push(x0 + (x1 - x0) * (-v0) / (v1 - v0));
+      }
+      const momentCandidates = Array.from(new Set(momentXs)).map((x) => ({ x, value: momentAt(data, reactions, x) }));
+      if (![...shearCandidates.map((item) => item.value), ...momentCandidates.map((item) => item.value), ...deflection.map((item) => item.value)].every(Number.isFinite)) {
+        throw new Error("The inputs produced a non-finite beam response. Check the values and units.");
+      }
+      const shearMax = shearCandidates.reduce((best, item) => Math.abs(item.value) > Math.abs(best.value) ? item : best, { x: 0, value: 0 });
+      const momentMax = momentCandidates.reduce((best, item) => Math.abs(item.value) > Math.abs(best.value) ? item : best, { x: 0, value: 0 });
+      const deflectionMax = deflection.reduce((best, item) => Math.abs(item.value) > Math.abs(best.value) ? item : best, { x: 0, value: 0 });
+      return { shearMax, momentMax, deflectionMax };
+    }
+
+    function fmt(value, digits = 3) {
+      if (!Number.isFinite(value)) return "—";
+      const abs = Math.abs(value);
+      if (abs !== 0 && abs < 0.001) return value.toExponential(2);
+      return Number(value.toFixed(digits)).toString();
+    }
+
+    function fmtLength(inches) {
+      return fmt(lengthFromIn(inches), 3) + " " + unitLabels().length;
+    }
+
+    function fmtForce(kips) {
+      return fmt(forceFromKip(kips), 3) + " " + unitLabels().force;
+    }
+
+    function fmtMoment(kipIn) {
+      const value = activeUnits === "us" ? kipIn / IN_PER_FT : kipIn / IN_PER_M / KIP_PER_KN;
+      return fmt(value, 3) + " " + unitLabels().moment;
+    }
+
+    function fmtDeflection(inches) {
+      const value = activeUnits === "us" ? inches : inches * MM_PER_IN;
+      return fmt(value, 3) + " " + unitLabels().deflection;
+    }
+
+    function fmtCoordinate(x) {
+      return fmt(lengthFromIn(x), 2) + " " + unitLabels().length;
+    }
+
+    function renderMetrics(data, reactions, envelope) {
+      const limit = data.L / 360;
+      const deflectionMagnitude = Math.abs(envelope.deflectionMax.value);
+      const deflectionDirection = deflectionMagnitude === 0
+        ? "no deflection"
+        : envelope.deflectionMax.value < 0 ? "down" : "up";
+      const values = [
+        { label: "Max shear magnitude", value: fmtForce(Math.abs(envelope.shearMax.value)), sub: "at x = " + fmtCoordinate(envelope.shearMax.x) },
+        { label: "Max moment magnitude", value: fmtMoment(Math.abs(envelope.momentMax.value)), sub: "at x = " + fmtCoordinate(envelope.momentMax.x) },
+        { label: "Maximum deflection", value: fmtDeflection(deflectionMagnitude), sub: deflectionDirection + " · x = " + fmtCoordinate(envelope.deflectionMax.x) },
+        { label: "L/360 reference", value: fmtDeflection(limit), sub: "informational only; no pass/fail check" }
+      ];
+      document.getElementById("metrics").innerHTML = values.map((metric) =>
+        '<div class="metric"><span class="metric-label">' + metric.label + '</span><strong class="metric-value">' + metric.value + '</strong><span class="metric-sub">' + metric.sub + '</span></div>'
+      ).join("");
+
+      const reactionItems = data.support === "simple"
+        ? [["Left reaction", reactions.left], ["Right reaction", reactions.right]]
+        : [["Fixed-end vertical reaction", reactions.left]];
+      if (data.support === "cantilever") {
+        const coupleUnit = activeUnits === "us" ? "kip-ft" : "kN-m";
+        const couple = activeUnits === "us" ? reactions.supportMoment / IN_PER_FT : reactions.supportMoment / IN_PER_M / KIP_PER_KN;
+        document.getElementById("reactions").innerHTML = reactionItems.map((item) =>
+          '<span class="reaction-chip">' + item[0] + ': <strong>' + fmtForce(item[1]) + '</strong></span>'
+        ).join("") + '<span class="reaction-chip">Fixed-end reaction moment: <strong>' + fmt(couple, 3) + ' ' + coupleUnit + '</strong></span>';
+      } else {
+        document.getElementById("reactions").innerHTML = reactionItems.map((item) =>
+          '<span class="reaction-chip">' + item[0] + ': <strong>' + fmtForce(item[1]) + '</strong></span>'
+        ).join("");
+      }
+    }
+
+    function plotSvg(points, label, unitText) {
+      const width = 900;
+      const height = 205;
+      const left = 64;
+      const right = 18;
+      const top = 18;
+      const bottom = 32;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+      let values = points.map((point) => point.value).filter(Number.isFinite);
+      if (!values.length) values = [0];
+      let min = Math.min(0, ...values);
+      let max = Math.max(0, ...values);
+      if (Math.abs(max - min) < 1e-12) {
+        max = 1;
+        min = -1;
+      } else {
+        const pad = (max - min) * .12;
+        max += pad;
+        min -= pad;
+      }
+      const xMin = points.length ? Math.min(...points.map((point) => point.x)) : 0;
+      const xMax = points.length ? Math.max(...points.map((point) => point.x)) : 1;
+      const span = Math.max(xMax - xMin, 1e-9);
+      const mapX = (x) => left + (x - xMin) / span * plotWidth;
+      const mapY = (value) => top + (max - value) / (max - min) * plotHeight;
+      const zeroY = mapY(0);
+      const path = points.map((point, index) => (index ? "L" : "M") + mapX(point.x).toFixed(2) + "," + mapY(point.value).toFixed(2)).join(" ");
+      const xMiddle = mapX((xMin + xMax) / 2);
+      const minLabel = fmt(min, 2);
+      const maxLabel = fmt(max, 2);
+      return '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + label + ' diagram, units ' + unitText + '">' +
+        '<line class="chart-grid" x1="' + left + '" y1="' + (top + plotHeight / 2) + '" x2="' + (width - right) + '" y2="' + (top + plotHeight / 2) + '"></line>' +
+        '<line class="chart-axis" x1="' + left + '" y1="' + zeroY + '" x2="' + (width - right) + '" y2="' + zeroY + '"></line>' +
+        '<path class="chart-line" d="' + path + '"></path>' +
+        '<text class="chart-label" x="8" y="' + (top + 4) + '">' + maxLabel + '</text>' +
+        '<text class="chart-label" x="8" y="' + (top + plotHeight) + '">' + minLabel + '</text>' +
+        '<text class="chart-label" x="' + left + '" y="' + (height - 7) + '">0</text>' +
+        '<text class="chart-label" x="' + xMiddle + '" y="' + (height - 7) + '" text-anchor="middle">x</text>' +
+        '<text class="chart-label" x="' + (width - right) + '" y="' + (height - 7) + '" text-anchor="end">' + fmtLength(xMax) + '</text>' +
+        '<text class="chart-label" x="' + (width - right - 4) + '" y="' + (top + 11) + '" text-anchor="end">' + unitText + '</text>' +
+        '</svg>';
+    }
+
+    function renderBeamDiagram(data) {
+      const width = 900;
+      const height = 205;
+      const x0 = 64;
+      const x1 = width - 64;
+      const yBeam = 130;
+      const mapX = (x) => x0 + x / data.L * (x1 - x0);
+      const parts = [
+        '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="Beam diagram with supports and applied loads">',
+        '<defs><marker id="load-arrow" markerWidth="8" markerHeight="8" refX="4" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--load)"></path></marker><marker id="point-arrow" markerWidth="8" markerHeight="8" refX="4" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="var(--red)"></path></marker></defs>',
+        '<line x1="' + x0 + '" y1="' + yBeam + '" x2="' + x1 + '" y2="' + yBeam + '" stroke="var(--pine)" stroke-width="5" stroke-linecap="round"></line>'
+      ];
+      if (data.support === "simple") {
+        parts.push('<path d="M' + (x0 - 16) + ',159 L' + x0 + ',' + yBeam + ' L' + (x0 + 16) + ',159 Z" fill="var(--pine-soft)" stroke="var(--muted)" stroke-width="1.5"></path>');
+        parts.push('<path d="M' + (x1 - 16) + ',159 L' + x1 + ',' + yBeam + ' L' + (x1 + 16) + ',159 Z" fill="var(--pine-soft)" stroke="var(--muted)" stroke-width="1.5"></path>');
+        parts.push('<line x1="' + (x0 - 23) + '" y1="160" x2="' + (x0 + 23) + '" y2="160" stroke="var(--muted)"></line><line x1="' + (x1 - 23) + '" y1="160" x2="' + (x1 + 23) + '" y2="160" stroke="var(--muted)"></line>');
+      } else {
+        parts.push('<line x1="' + (x0 - 7) + '" y1="78" x2="' + (x0 - 7) + '" y2="174" stroke="var(--muted)" stroke-width="4"></line>');
+        for (let y = 84; y <= 168; y += 12) parts.push('<line x1="' + (x0 - 18) + '" y1="' + (y + 8) + '" x2="' + (x0 - 7) + '" y2="' + y + '" stroke="var(--line)" stroke-width="1.5"></line>');
+      }
+
+      const loadItems = [];
+      data.uniforms.forEach((load) => loadItems.push({ type: "uniform", a: load.a, b: load.b, magnitude: load.q }));
+      if (data.selfWeight > 0) loadItems.push({ type: "uniform", a: 0, b: data.L, magnitude: -data.selfWeight, selfWeight: true });
+      const levelCount = Math.max(loadItems.length, data.points.length);
+      loadItems.forEach((load, index) => {
+        const yTop = 42 + (index % 2) * 20;
+        const xa = mapX(load.a);
+        const xb = mapX(load.b);
+        const mid = (xa + xb) / 2;
+        const arrowCount = Math.max(2, Math.floor((xb - xa) / 44));
+        parts.push('<line x1="' + xa + '" y1="' + yTop + '" x2="' + xb + '" y2="' + yTop + '" stroke="var(--load)" stroke-width="1.5"></line>');
+        for (let indexArrow = 0; indexArrow <= arrowCount; indexArrow += 1) {
+          const x = xa + (xb - xa) * indexArrow / arrowCount;
+          const yStart = load.magnitude < 0 ? yTop : yBeam - 4;
+          const yEnd = load.magnitude < 0 ? yBeam - 4 : yTop;
+          parts.push('<line x1="' + x + '" y1="' + yStart + '" x2="' + x + '" y2="' + yEnd + '" stroke="var(--load)" stroke-width="1.4" marker-end="url(#load-arrow)"></line>');
+        }
+        const value = Math.abs(load.magnitude);
+        const formatted = load.selfWeight
+          ? (activeUnits === "us" ? fmt(value * 12000, 3) + " lb/ft self-weight" : fmt(distributedFromKipPerIn(value), 3) + " kN/m self-weight")
+          : (activeUnits === "us" ? fmt(value * 12, 3) + " kip/ft" : fmt(distributedFromKipPerIn(value), 3) + " kN/m");
+        parts.push('<text x="' + mid + '" y="' + (yTop - 7) + '" text-anchor="middle" fill="var(--load-ink)" font-size="11">' + formatted + '</text>');
+      });
+      data.points.forEach((point, index) => {
+        const x = mapX(point.a);
+        const yTop = 42 + (index % 2) * 20;
+        const yBottom = point.P < 0 ? yBeam - 4 : yBeam + 4;
+        const yStart = point.P < 0 ? yTop : yBeam + 43;
+        parts.push('<line x1="' + x + '" y1="' + yStart + '" x2="' + x + '" y2="' + yBottom + '" stroke="var(--red)" stroke-width="2" marker-end="url(#point-arrow)"></line>');
+        parts.push('<text x="' + x + '" y="' + (point.P < 0 ? yTop - 6 : yBeam + 62) + '" text-anchor="middle" fill="var(--red)" font-size="11">' + fmt(forceFromKip(Math.abs(point.P)), 3) + ' ' + unitLabels().force + '</text>');
+      });
+      parts.push('<text x="' + x0 + '" y="190" text-anchor="middle" fill="var(--muted)" font-size="11">0</text>');
+      parts.push('<text x="' + x1 + '" y="190" text-anchor="middle" fill="var(--muted)" font-size="11">' + fmtLength(data.L) + '</text>');
+      parts.push('<text x="' + ((x0 + x1) / 2) + '" y="190" text-anchor="middle" fill="var(--muted)" font-size="11">' + data.sectionName.replace(/[<>&"]/g, "") + ' · ' + (data.support === "simple" ? "simply supported" : "cantilever fixed at left") + '</text>');
+      if (levelCount > 0) parts.push('<text x="885" y="18" text-anchor="end" fill="var(--muted)" font-size="10">Load directions shown</text>');
+      parts.push('</svg>');
+      document.getElementById("beam-diagram").innerHTML = parts.join("");
+    }
+
+    function renderResults(data) {
+      const reactions = supportReactions(data);
+      const xs = sampleCoordinates(data, 800);
+      const deflection = deflectionCurve(data, reactions, xs);
+      const envelope = getEnvelope(data, reactions, xs, deflection);
+      if (![reactions.left, reactions.right, reactions.internalMomentAtLeft, envelope.shearMax.value, envelope.momentMax.value, envelope.deflectionMax.value].filter((value) => value !== null).every(Number.isFinite)) {
+        throw new Error("The inputs produced a non-finite result. Check the values and units.");
+      }
+
+      renderMetrics(data, reactions, envelope);
+      document.getElementById("result-caption").textContent =
+        (data.support === "simple" ? "Simply supported" : "Cantilever") + " · " + fmtLength(data.L) + " span · " + data.material;
+      renderBeamDiagram(data);
+
+      const shearPoints = [];
+      xs.forEach((x) => {
+        const pointAt = data.points.some((point) => Math.abs(point.a - x) < 1e-8);
+        if (pointAt && x > 0 && x < data.L) {
+          shearPoints.push({ x, value: shearAt(data, reactions, x, "left") });
+          shearPoints.push({ x, value: shearAt(data, reactions, x, "right") });
+        } else {
+          shearPoints.push({ x, value: shearAt(data, reactions, x, x === data.L ? "left" : "right") });
+        }
+      });
+      document.getElementById("shear-diagram").innerHTML = plotSvg(shearPoints.map((point) => ({ x: point.x, value: forceFromKip(point.value) })), "Shear force", unitLabels().force);
+      document.getElementById("moment-diagram").innerHTML = plotSvg(xs.map((x) => {
+        const moment = momentAt(data, reactions, x);
+        return { x, value: activeUnits === "us" ? moment / IN_PER_FT : moment / IN_PER_M / KIP_PER_KN };
+      }), "Bending moment", unitLabels().moment);
+      document.getElementById("deflection-diagram").innerHTML = plotSvg(deflection.map((point) => ({
+        x: point.x,
+        value: activeUnits === "us" ? point.value : point.value * MM_PER_IN
+      })), "Elastic deflection", unitLabels().deflection);
+
+      const weightNote = document.getElementById("self-weight-note");
+      if (data.includeSelfWeight) {
+        const lineLoad = activeUnits === "us" ? data.selfWeight * 12000 : distributedFromKipPerIn(data.selfWeight);
+        weightNote.textContent = "Member self-weight is included as a downward uniform load of " + fmt(lineLoad, 3) + " " + unitLabels().weight + ".";
+      } else {
+        weightNote.textContent = "Member self-weight is excluded from this analysis.";
+      }
+    }
+
+    function calculateAndRender() {
+      try {
+        const data = readInputs();
+        const reaction = supportReactions(data);
+        const checks = [reaction.left, reaction.right, reaction.internalMomentAtLeft].filter((value) => value !== null);
+        if (!checks.every(Number.isFinite)) throw new Error("The support reaction is outside the supported numeric range.");
+        clearError();
+        renderResults(data);
+      } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        showError(error.message);
+      }
+    }
+
+    function setMaterialDefaults(material) {
+      if (material === "lumber") {
+        document.getElementById("section-name").value = "Custom lumber member";
+        document.getElementById("elastic-modulus").value = "";
+        document.getElementById("inertia").value = "";
+        document.getElementById("weight-per-length").value = "";
+        document.getElementById("property-note").textContent = "No lumber catalog is included. Enter E, I, and (if enabled) weight from a trusted source.";
+      } else {
+        document.getElementById("section-name").value = SAMPLE.section;
+        document.getElementById("elastic-modulus").value = activeUnits === "us" ? String(SAMPLE.elasticKsi) : formatInputNumber(SAMPLE.elasticKsi / KSI_PER_GPA);
+        document.getElementById("inertia").value = activeUnits === "us" ? String(SAMPLE.inertiaIn4) : formatInputNumber(SAMPLE.inertiaIn4 / IN4_PER_MM4);
+        document.getElementById("weight-per-length").value = activeUnits === "us" ? String(SAMPLE.weightLbFt) : formatInputNumber(weightFromKipPerIn(SAMPLE.weightLbFt / 12000));
+        document.getElementById("property-note").textContent = "Sample values are illustrative. Verify E, I, and weight against a trusted source.";
+      }
+      calculateAndRender();
+    }
+
+    document.getElementById("units").addEventListener("change", (event) => {
+      changeUnits(event.target.value);
+    });
+
+    document.getElementById("material").addEventListener("change", (event) => {
+      setMaterialDefaults(event.target.value);
+    });
+
+    document.querySelectorAll("#beam-form input, #beam-form select").forEach((input) => {
+      if (input.id === "units" || input.id === "material") return;
+      input.addEventListener("input", calculateAndRender);
+      input.addEventListener("change", calculateAndRender);
+    });
+
+    document.querySelectorAll("[data-add-load]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const spanValue = Number(document.getElementById("span").value);
+        const safeSpan = Number.isFinite(spanValue) && spanValue > 0 ? spanValue : (activeUnits === "us" ? SAMPLE.spanFt : SAMPLE.spanFt / 3.280839895);
+        if (button.dataset.addLoad === "point") {
+          createLoadRow("point", { position: formatInputNumber(safeSpan / 2) });
+        } else {
+          createLoadRow("uniform", { start: "0", end: formatInputNumber(safeSpan) });
+        }
+      });
+    });
+
+    form.addEventListener("submit", (event) => event.preventDefault());
+
+    setUnitLabels();
+    createLoadRow("uniform", {
+      magnitude: String(SAMPLE.uniformKipFt),
+      direction: "down",
+      start: "0",
+      end: String(SAMPLE.spanFt)
+    });
+  </script>
+</body>
+</html>
